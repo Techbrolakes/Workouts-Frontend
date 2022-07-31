@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import useSWR from "swr";
+import { Skeleton } from "antd";
 
 // components
 import WorkoutDetails from "../components/WorkoutDetails";
@@ -8,21 +9,26 @@ import { useWorkoutsContext } from "../hooks/useWorkoutContext";
 const Home = () => {
   const { workouts, dispatch } = useWorkoutsContext();
 
-  useEffect(() => {
-    const fetchWorkouts = async () => {
-      const response = await fetch("/api/workouts");
-      const json = await response.json();
+  const fetcher = async () => {
+    const response = await fetch("/api/workouts");
+    const json = await response.json();
 
-      if (response.ok) {
-        dispatch({
-          type: "SET_WORKOUTS",
-          payload: json,
-        });
-      }
-    };
+    if (response.ok) {
+      dispatch({
+        type: "SET_WORKOUTS",
+        payload: json,
+      });
+    }
 
-    fetchWorkouts();
+    return json;
+  };
+
+  const { data, error } = useSWR("/api/workouts", fetcher, {
+    refreshInterval: 10000,
   });
+
+  console.log(data);
+  console.log(error);
 
   return (
     <div className="home">
@@ -32,7 +38,7 @@ const Home = () => {
             <WorkoutDetails workout={workout} key={workout._id} />
           ))
         ) : (
-          <h1>Loading...........</h1>
+          <h1>Loading.....................</h1>
         )}
       </div>
       <WorkoutForm />
